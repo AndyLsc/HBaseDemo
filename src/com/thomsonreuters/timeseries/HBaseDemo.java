@@ -37,11 +37,12 @@ public class HBaseDemo {
 	        	HBaseUtil.listTable(conf);
 	        	break;
 	        case "create":
-	        	if(cmd.length != 2) {
-	        		System.out.println("create <tablename>");
+	        	if(cmd.length != 3) {
+	        		System.out.println("create <tablename> <column family>");
 	        	} else {
 	        		String tablename = cmd[1];
-	        		HBaseUtil.createTable(conf, tablename);
+	        		String family = cmd[2];
+	        		HBaseUtil.createTable(conf, tablename, family);
 	        	}
 	        	break;
 	        case "disable":
@@ -69,11 +70,12 @@ public class HBaseDemo {
 	        	}
 	        	break;	   
 	        case "modify":
-	        	if(cmd.length != 2) {
-	        		System.out.println("modify <tablename>");
+	        	if(cmd.length != 3) {
+	        		System.out.println("modify <tablename> <column family>");
 	        	} else {
 	        		String tablename = cmd[1];
-	        		HBaseUtil.modifyTable(conf, tablename);
+	        		String family = cmd[2];
+	        		HBaseUtil.modifyTable(conf, tablename, family);
 	        	}
 	        	break;	   
 	        case "count":
@@ -145,7 +147,7 @@ public class HBaseDemo {
 	        default:
 	        	if(text.length() == 0)
 	        		break;
-	        	System.out.println("unknown command");
+	        	System.out.println("unknown command '" + cmd[0] + "'");
 	      }
 	      
 	      

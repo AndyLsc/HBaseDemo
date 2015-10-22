@@ -32,7 +32,7 @@ public class HBaseUtil {
 			}
 	  }
 	  
-	  static void createTable(Configuration conf, String tablename) {
+	  static void createTable(Configuration conf, String tablename, String family) {
 			HBaseAdmin admin;
 			try {
 				admin = new HBaseAdmin(conf);
@@ -40,8 +40,9 @@ public class HBaseUtil {
 					System.out.println("Table '" + tablename + "' exists.");
 				} else {
 					HTableDescriptor htd = new HTableDescriptor(tablename);
-					HColumnDescriptor cf = new HColumnDescriptor("c");
+					HColumnDescriptor cf = new HColumnDescriptor(family);
 					cf.setTimeToLive(65535);
+					cf.setMaxVersions(3);
 					htd.addFamily(cf);
 				    admin.createTable(htd);
 				    System.out.println("Successfully create table '" + tablename + "'");
@@ -100,15 +101,16 @@ public class HBaseUtil {
 			}
 	  }
 
-	  static void modifyTable(Configuration conf, String tablename) {
+	  static void modifyTable(Configuration conf, String tablename, String family) {
 			HBaseAdmin admin;
 			try {
 				admin = new HBaseAdmin(conf);
 				if(!admin.tableExists(tablename)) {
 					System.out.println("Table '" + tablename + "' does not exists.");
 				} else {
-					HColumnDescriptor cf = new HColumnDescriptor("cc");
+					HColumnDescriptor cf = new HColumnDescriptor(family);
 					cf.setTimeToLive(65535);
+					cf.setMaxVersions(3);
 				    admin.addColumn(tablename, cf);
 				    System.out.println("Successfully modify table '" + tablename + "'");
 				}
@@ -143,6 +145,7 @@ public class HBaseUtil {
 		  try {
 			  table = new HTable(conf, tablename.getBytes());
 			  Scan scan = new Scan();
+			  scan.setMaxVersions(3);
 			  if(cf != null)
 				  scan.addFamily(cf.getBytes());
 			  if(startrow != null)
@@ -158,7 +161,8 @@ public class HBaseUtil {
 					  String key = new String(cell.getRow());
 					  String family = new String(cell.getFamily());
 					  String value = new String(cell.getValue());
-					  System.out.println(key + "\t" + family + ":" + value);
+					  String ts = Long.toString(cell.getTimestamp());
+					  System.out.println(key + "\t" + family + ":" + value + ", timestamp=" + ts);
 				  }				  
 			  }
 			  
@@ -191,6 +195,7 @@ public class HBaseUtil {
 		  try {
 			  table = new HTable(conf, tablename.getBytes());
 			  Get get = new Get(row.getBytes());
+//			  get.setMaxVersions();
 			  if(cf != null)
 				  get.addFamily(cf.getBytes());
 			  
@@ -200,7 +205,8 @@ public class HBaseUtil {
 				  String key = new String(cell.getRow());
 				  String family = new String(cell.getFamily());
 				  String value = new String(cell.getValue());
-				  System.out.println(key + "\t" + family + ":" + value);
+				  String ts = Long.toString(cell.getTimestamp());
+				  System.out.println(key + "\t" + family + ":" + value + ", timestamp=" + ts);
 			  }				  
 			  
 			  table.close();
