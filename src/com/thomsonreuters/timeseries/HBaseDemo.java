@@ -78,6 +78,14 @@ public class HBaseDemo {
 	        		HBaseUtil.modifyTable(conf, tablename, family);
 	        	}
 	        	break;	   
+	        case "describe":
+	        	if(cmd.length != 2) {
+	        		System.out.println("describe <tablename>");
+	        	} else {
+	        		String tablename = cmd[1];
+	        		HBaseUtil.describeTable(conf, tablename);
+	        	}
+	        	break;	   	        	
 	        case "count":
 	        	if(cmd.length != 2) {
 	        		System.out.println("count <tablename>");
@@ -122,14 +130,15 @@ public class HBaseDemo {
 	        	}
 	        	break;	   	        	
 	        case "put":
-	        	if(cmd.length != 5) {
-	        		System.out.println("put <tablename> <row> <family> <value>");
+	        	if(cmd.length != 6) {
+	        		System.out.println("put <tablename> <row> <family> <qualifier> <value>");
 	        	} else {
 	        		String tablename = cmd[1];
 	        		String row = cmd[2];
 	        		String family = cmd[3];
-	        		String value = cmd[4];
-	        		HBaseUtil.putData(conf, tablename, row, family, value);
+	        		String qualifier = cmd[4];
+	        		String value = cmd[5];
+	        		HBaseUtil.putData(conf, tablename, row, family, qualifier, value);
 	        	}
 	        	break;	   	        	
 	        case "delete":

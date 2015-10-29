@@ -14,7 +14,6 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.util.Bytes;
 
 public class HBaseUtil {
 	  static void listTable(Configuration conf) {
@@ -119,6 +118,39 @@ public class HBaseUtil {
 				e.printStackTrace();
 			}
 	  }
+	  
+	  static void describeTable(Configuration conf, String tablename) {
+			HBaseAdmin admin;
+			try {
+				admin = new HBaseAdmin(conf);
+				if(!admin.tableExists(tablename)) {
+					System.out.println("Table '" + tablename + "' does not exists.");
+				} else {
+					HTableDescriptor htd = admin.getTableDescriptor(tablename.getBytes());
+					HColumnDescriptor[] cfs = htd.getColumnFamilies();
+					for(HColumnDescriptor cf: cfs) {
+						String family = cf.getNameAsString();
+						String maxversion = Integer.toString(cf.getMaxVersions());
+						String compression = cf.getCompression().getName();
+						String blocksize = Integer.toString(cf.getBlocksize());
+						String ttl = Integer.toString(cf.getTimeToLive());
+						String bloom = cf.getBloomFilterType().toString();	
+						String replication = Integer.toString(cf.getScope());
+						
+						System.out.println("Column Family: " + family);
+						System.out.println("\t Max Versions: " + maxversion);
+						System.out.println("\t Compression: " + compression);
+						System.out.println("\t Block Size: " + blocksize);
+						System.out.println("\t TTL: " + ttl);
+						System.out.println("\t Bloom Filter: " + bloom);
+						System.out.println("\t Replication: " + replication);
+					}
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}		  
+	  }
 
 	  static void countTable(Configuration conf, String tablename) {
 		  HTable table;
@@ -158,11 +190,7 @@ public class HBaseUtil {
 			  while((result = scanner.next()) != null) {
 				  Cell[] cells = result.rawCells();
 				  for(Cell cell: cells) {
-					  String key = new String(cell.getRow());
-					  String family = new String(cell.getFamily());
-					  String value = new String(cell.getValue());
-					  String ts = Long.toString(cell.getTimestamp());
-					  System.out.println(key + "\t" + family + ":" + value + ", timestamp=" + ts);
+					  displayCell(cell);
 				  }				  
 			  }
 			  
@@ -174,12 +202,12 @@ public class HBaseUtil {
 			}
 	  }
 
-	  static void putData(Configuration conf, String tablename, String row, String family, String value) {
+	  static void putData(Configuration conf, String tablename, String row, String family, String qualifier, String value) {
 		  HTable table;
 		  try {
 			  table = new HTable(conf, tablename.getBytes());
 			  Put put = new Put(row.getBytes());
-			  put.add(family.getBytes(), null, value.getBytes());
+			  put.add(family.getBytes(), qualifier.compareTo(".") == 0 ? null : qualifier.getBytes(), value.getBytes());
 			  table.put(put);
 			  System.out.println("Successfully put record.");
 			  
@@ -202,11 +230,7 @@ public class HBaseUtil {
 			  Result result = table.get(get);
 			  Cell[] cells = result.rawCells();
 			  for(Cell cell: cells) {
-				  String key = new String(cell.getRow());
-				  String family = new String(cell.getFamily());
-				  String value = new String(cell.getValue());
-				  String ts = Long.toString(cell.getTimestamp());
-				  System.out.println(key + "\t" + family + ":" + value + ", timestamp=" + ts);
+				  displayCell(cell);
 			  }				  
 			  
 			  table.close();
@@ -232,6 +256,18 @@ public class HBaseUtil {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+	  }
+	  
+	  static void displayCell(Cell cell) {
+		  String key = new String(cell.getRow());
+		  String family = new String(cell.getFamily());
+		  String qualifier = "";
+		  byte[] qua = cell.getQualifier();
+		  if(qua != null)
+			  qualifier = new String(qua);
+		  String value = new String(cell.getValue());
+		  String ts = Long.toString(cell.getTimestamp());
+		  System.out.println(key + "\t" + family + ":[" + qualifier + "] " + value + ", timestamp=" + ts);		  
 	  }
 
 }
